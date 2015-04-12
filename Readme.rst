@@ -38,8 +38,8 @@ Usage
 
 ``Image Process`` scans your content for ``<img>`` tags with special
 classes. It then maps the classes to a set of image processing
-instructions, computes new images and modifies HTML code according to
-the instructions.
+instructions, computes new images and modifies HTML code to use the
+new images.
 
 Define transformations
 ----------------------
@@ -61,8 +61,8 @@ compute a thumbnail from a larger image:
 .. code-block:: python
 
   IMAGE_PROCESS = {
-      'article-image': ["scale_in 300 300"],
-      'thumb': ["crop 0 0 50% 50%", "scale_out 150 150", "crop 0 0 150 150"],
+      'article-image': ["scale_in 300 300 True"],
+      'thumb': ["crop 0 0 50% 50%", "scale_out 150 150 True", "crop 0 0 150 150"],
       }
 
 These transformations tell ``Image process`` to transform the image
@@ -77,10 +77,10 @@ below, there is an alternative syntax for the processing instructions:
 
   IMAGE_PROCESS = {
       'thumb': {'type': 'image',
-                'ops': ["crop 0 0 50% 50%", "scale_out 150 150", "crop 0 0 150 150"],
+                'ops': ["crop 0 0 50% 50%", "scale_out 150 150 True", "crop 0 0 150 150"],
                 }
       'article-image': {'type': 'image',
-                        'ops': ["scale_in 300 300"],
+                        'ops': ["scale_in 300 300 True"],
                         }
       }
 
@@ -121,10 +121,10 @@ You can use ``Image process`` to automatically generate a set of
 images that will be selected for display by browsers according to the
 viewport width or according to the device resolution. To accomplish
 this, ``Image process`` will add a ``srcset`` attribute (and maybe a
-``media`` and a ``sizes`` attribute) to the ``<img>``.
+``sizes`` attribute) to the ``<img>``.
 
 Note that the ``srcset`` syntax is currently not supported by all
-browsers. However, browsers who do not support the ``srcset``
+browsers. However, browsers which do not support the ``srcset``
 attribute will fall back to a default image specified by the
 still-present ``src`` attribute. See `Can I Use`_ for the current
 status on ``srcset`` support.
@@ -172,9 +172,9 @@ of tuple, each tuple containing the image description (``'1x'``,
 image from the original image (the original image is the value of the
 ``src`` attribute of the ``<img>``). Image descriptions are hints
 about the resolution of the associated image and must have the suffix
-``x``. The ``default`` names the image to use to replace the ``src``
-attribute of the image.  This is the image that will be displayed by
-browsers that do not support the ``srcset`` syntax.
+``x``. The ``default`` specifies the image to use to replace the
+``src`` attribute of the image.  This is the image that will be
+displayed by browsers that do not support the ``srcset`` syntax.
 
 The ``large-photo`` transformation is an example of a transformation
 enabling viewport-based selection. The ``sizes`` contains a rule to
@@ -186,19 +186,18 @@ etc.) and the list of operations to generate the derivative image from
 the original image (the original image is the value of the ``src``
 attribute of the ``<img>``). Image descriptions are hints about the
 width in pixels of the associated image and must have the suffix
-``w``. The ``default`` names the image to use to replace the ``src``
-attribute of the image.  This is the image that will be displayed by
-browsers that do not support the ``srcset`` syntax.
+``w``. The ``default`` specifies the image to use to replace the
+``src`` attribute of the image.  This is the image that will be
+displayed by browsers that do not support the ``srcset`` syntax.
 
 In the two examples above, the ``default`` is a string referring to
 one of the images in the ``srcset``. However, the ``default`` value
-could also be a list of operations to generate a different derivative
-image.
+could also be a list of operations to generate a different image.
 
 To make the images in your article responsives, you must add them the
 special class ``image-process-`` followed by the name of the
 transformation you wish to apply, exactly like you would do for the
-image replacement case, described above. So, if you write your content
+image replacement case described above. So, if you write your content
 in HTML or in Markdown, do something like this:
 
 .. code-block:: html
@@ -206,8 +205,8 @@ in HTML or in Markdown, do something like this:
   <img class="image-process-large-photo" src="/images/pelican.jpg"/>
 
 
-In reStructuredText, use the ``:class:`` attribute of the ``image`` of
-the ``figure`` directive:
+In reStructuredText, use the ``:class:`` attribute of the ``image`` or
+of the ``figure`` directive:
 
 .. code-block:: rst
 
@@ -261,7 +260,7 @@ image`` describe above. Here, each source must have a ``name``, which
 will be used to find the URL of the original image for this source in
 your article. The source may also have a ``media``, which contains a
 rule used by the browser to select the active source. The ``default``
-names the image to use to replace the ``src`` attribute of the
+specifies the image to use to replace the ``src`` attribute of the
 ``<img>`` inside the ``<picture>``.  This is the image that will be
 displayed by browsers that do not support the ``<picture>`` syntax. In
 this example, it will use the image ``640w`` from the source
@@ -288,13 +287,13 @@ transformation definition.
 
 
 The pseudo ``<picture>`` tag above can be used in articles written in
-HTML, Markdown or restructuredText. In reStructuredText, however, you
-can also use the ``figure`` directive to generate a ``<picture>``. The
-figure image file will be used as the special ``default`` source;
-other sources must be added in the the legend section of the
-``figure`` as ``image`` directives. The figure class must be
-``image-process-`` followed by the name of the transformation you wish
-to apply, while the other images must have two classes:
+HTML, Markdown or restructuredText (with the ``raw`` directive). In
+reStructuredText, however, you can also use the ``figure`` directive
+to generate a ``<picture>``. The figure image file will be used as the
+special ``default`` source; other sources must be added in the legend
+section of the ``figure`` as ``image`` directives. The figure class
+must be ``image-process-`` followed by the name of the transformation
+you wish to apply, while the other images must have two classes:
 ``image-process`` and the name of the source they provide an image
 for:
 
@@ -397,7 +396,7 @@ its first parameter and it should return the transformed image:
       return image
 
   IMAGE_PROCESS = {
-      'face-thumbnail': [crop_face, "scale_out 150 150"]
+      'face-thumbnail': [crop_face, "scale_out 150 150 True"]
       }
 
 
