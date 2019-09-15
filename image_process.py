@@ -26,6 +26,17 @@ Path = collections.namedtuple(
 )
 PELICAN_MAJOR_VERSION = int(pelican_version.split('.')[0])
 
+# See https://pillow.readthedocs.io/en/stable/handbook/image-file-formats.html
+IMAGE_PROCESS_FORMAT_OPTIONS_DEFAULTS = {
+    'JPEG': {
+        'optimize': True,
+        'quality': 75,
+        'progressive': True,
+    },
+    'PNG': {
+        'optimize': True,
+    },
+}
 
 def convert_box(image, top, left, right, bottom):
     """Convert box coordinates strings to integer.
@@ -507,6 +518,14 @@ def process_image(image, settings):
 
         i = Image.open(image[0])
 
+        # File format defaults
+        format_options = copy.deepcopy(IMAGE_PROCESS_FORMAT_OPTIONS_DEFAULTS.get(i.format, {}))
+
+        # Custom settings
+        if 'IMAGE_PROCESS_FORMAT_OPTIONS' in settings and i.format in settings['IMAGE_PROCESS_FORMAT_OPTIONS']:
+            custom_format_options = settings['IMAGE_PROCESS_FORMAT_OPTIONS'][i.format]
+            format_options.update(custom_format_options)
+
         for step in image[2]:
             if hasattr(step, '__call__'):
                 i = step(i)
@@ -514,7 +533,7 @@ def process_image(image, settings):
                 elems = step.split(' ')
                 i = basic_ops[elems[0]](i, *(elems[1:]))
 
-        i.save(image[1])
+        i.save(image[1], **format_options)
 
 
 def register():
